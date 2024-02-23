@@ -3,5 +3,6 @@ project(vector C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(vector main.c)
-        ##stringComparision.c)
+add_executable(vector
+        string_comparision_using_VI.c
+)
