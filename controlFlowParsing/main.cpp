@@ -20,16 +20,14 @@ struct Packet{
     Ip_header *ip_header;
 };
 
+unsigned long long rdtsc() {
+    unsigned int lo, hi;
+    __asm__ volatile ("rdtsc" : "=a" (lo), "=d" (hi));
+    return ((unsigned long long)hi << 32) | lo;
+}
+
 int main() {
     //array of pointers to the struct Packet.
-    /*
-    * 10000
-100000
-250000
-500000
-750000
-1000000
-    * */
     int len = 1000000;
     struct Packet *packet_array = (struct Packet *)malloc(sizeof(struct Packet)); ;
     //loop to fill in the packets array wth dummy data
@@ -65,55 +63,41 @@ int main() {
             }
         }
     }
-
-                 if(eth->eth_protocol == IPV4 && eth->ip_header->ip_protocol == TCP) {
-                dest_port[i] = eth->ip_header->tcp_header->dest_port;
-        }else if(eth->eth_protocol == IPV6 && eth->ip_header->ip_protocol == TCP){
-                dest_port[i] = eth->ip_header->tcp_header->dest_port;
-        }
     */
-    clock_t start, end;
-    double execution_time;
-    start = clock();
 
+    unsigned long long start_cycles, end_cycles, elapsed_cycles;
+    double elapsed_seconds;
+    double clock_frequency = 2.4e9; 
 
-    std::list<double> sample;
+     std::list<double> sample;
     int started = 0;
-    std::ofstream outputFile("float_list_seq.txt");
 
     for(int i = 0; i <len;i++){
-//        if(i%128 == 0){
-//            started = 1;
-//            start = clock();
-//        }
+       if(i%128 == 0){
+           started = 1;
+           start_cycles = rdtsc();
+       }
         struct Packet eth = packet_array[i];
         dest_port[i] = (eth.eth_protocol == IPV4 && eth.ip_header->ip_protocol == TCP)
                 ?eth.ip_header->tcp_header->dest_port
                 :eth.ip_header->tcp_header->source_port;
 
-//        if(started == 1){
-//            end = clock();
-//            execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
-//            sample.push_back(execution_time);
-//            started = 0;
-//        }
+       if(started == 1){
+          end_cycles = rdtsc();
+          elapsed_cycles = end_cycles - start_cycles;
+          elapsed_seconds = (double)elapsed_cycles / clock_frequency;
+          sample.push_back(elapsed_seconds);
+          started = 0;
+       }
     }
-
-
-    end = clock();
-    execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
-    printf("Execution time: %f\n",execution_time);
-
 
 //    for (int i : dest_port) {
 //        printf("  dest_port: %d\n", i);
 //    }
-//    double sum = 0;
-//    std::cout << "Float List:" << sample.size();
-//    for (double num : sample) {
-//        sum += num;
-//        outputFile << num << "\n ";
-//    }
-//    outputFile<< "AVERAGE : "<< sum/sample.size();
+   double sum = 0;
+   for (double num : sample) {
+       sum += num;
+   }
+   std::cout<< "AVERAGE : "<< sum/sample.size()<<"\n";
     return 0;
 }
