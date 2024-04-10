@@ -10,17 +10,32 @@
 #define IPV4 2000
 #define TCP 500
 
-
-struct Packet{
-    struct Ip_header{
-        int32_t ip_protocol;
-        struct TCP_header{
+struct TCP_header{
             int32_t dest_port;
             int32_t source_port;
-        } tcp_header;
-    } ip_header;
-    int32_t eth_protocol;
 };
+
+struct Ip_header{
+    int32_t ip_protocol;
+    struct TCP_header tcp_header;
+};
+struct Packet{
+    int32_t eth_protocol;
+    struct Ip_header ip_header;
+
+};
+
+
+// struct Packet{
+//     struct Ip_header{
+//         int32_t ip_protocol;
+//         struct TCP_header{
+//             int32_t dest_port;
+//             int32_t source_port;
+//         } tcp_header;
+//     } ip_header;
+//     int32_t eth_protocol;
+// };
 
 unsigned long long rdtsc() {
     unsigned int lo, hi;
@@ -69,7 +84,11 @@ int main() {
         struct Packet eth4 = packet_array[i+3];
 
         __m128i eth_proto = _mm_set_epi32(eth.eth_protocol, eth2.eth_protocol,  eth3.eth_protocol, eth4.eth_protocol);
-        __m128i ip_proto = _mm_set_epi32(eth.ip_header.ip_protocol , eth2.ip_header.ip_protocol ,  eth3.ip_header.ip_protocol , eth4.ip_header.ip_protocol);
+        // __m128i ip_proto = _mm_set_epi32(eth.ip_header.ip_protocol , eth2.ip_header.ip_protocol ,  eth3.ip_header.ip_protocol , eth4.ip_header.ip_protocol);
+        __m128i ip_proto = _mm_set_epi32(*(&eth + offsetof(Packet, ip_header)+ offsetof(Ip_header, ip_protocol)), 
+                                            *(&eth2 + offsetof(Packet, ip_header)+ offsetof(Ip_header, ip_protocol)) ,
+                                            *(&eth3 + offsetof(Packet, ip_header)+ offsetof(Ip_header, ip_protocol) ), 
+                                            *(&eth4 + offsetof(Packet, ip_header)+ offsetof(Ip_header, ip_protocol)));
         __m128i destport = _mm_set_epi32(eth.ip_header.tcp_header.dest_port , eth2.ip_header.tcp_header.dest_port ,  eth3.ip_header.tcp_header.dest_port , eth4.ip_header.tcp_header.dest_port );
         __m128i sourceport = _mm_set_epi32(eth.ip_header.tcp_header.source_port , eth2.ip_header.tcp_header.source_port ,  eth3.ip_header.tcp_header.source_port , eth4.ip_header.tcp_header.source_port);
 

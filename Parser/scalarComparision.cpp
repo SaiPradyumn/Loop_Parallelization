@@ -28,7 +28,7 @@ struct ParsedPacket {
     int parsedValue;
 };
 int main() {
-    const int arraySize = 500000;
+    const int arraySize = 1000000;
     Packet packets[arraySize];
 
     for (int i = 0; i < arraySize; ++i) {
@@ -48,14 +48,15 @@ int main() {
         __m128i mask = _mm_cmpeq_epi32(protocolVector, _mm_setzero_si128());
         // 1010 , 0000 == 1010
 
-        __m128i parsedValues = _mm_blendv_epi8(_mm_set1_epi32(VALUE1),_mm_set1_epi32(VALUE2), mask);
+        __m128i parsedValues = _mm_blendv_epi8(_mm_set1_epi32(VALUE1),protocolVector, mask);
+         parsedValues = _mm_blendv_epi8(parsedValues,_mm_set1_epi32(VALUE2), mask);
 
-        alignas(16) int parsedResults[4];
-        _mm_store_si128(reinterpret_cast<__m128i*>(parsedResults), parsedValues);
+        // alignas(16) int parsedResults[4];
+        // _mm_store_si128(reinterpret_cast<__m128i*>(parsedResults), parsedValues);
 
-        for (int j = 0; j < 4; ++j) {
-            res[i + j].parsedValue = parsedResults[j];
-        }
+        // for (int j = 0; j < 4; ++j) {
+        //     res[i + j].parsedValue = parsedResults[j];
+        //}
 
     }
 
@@ -85,4 +86,3 @@ int main() {
 
     return 0;
 }
-

@@ -58,17 +58,19 @@ int main() {
 
         __m128i protocolVector = _mm_set_epi32(packets[i + 3].protocol, packets[i + 2].protocol,packets[i + 1].protocol, packets[i].protocol);
 
-        __m128i mask = _mm_cmpeq_epi32(protocolVector, _mm_setzero_si128());
-        // 1010 , 0000 == 1010
-
-        __m128i parsedValues = _mm_blendv_epi8(protocolVector,_mm_set1_epi32(VALUE2), mask);
-
         if(started == 1){
              end = clock();
              execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
              sample_loadCmp.push_back(execution_time);
              startStore = clock();
         }
+
+        __m128i mask = _mm_cmpeq_epi32(protocolVector, _mm_setzero_si128());
+        // 1010 , 0000 == 1010
+
+        __m128i parsedValues = _mm_blendv_epi8(protocolVector,_mm_set1_epi32(VALUE2), mask);
+
+        
         alignas(16) int parsedResults[4];
         _mm_store_si128(reinterpret_cast<__m128i*>(parsedResults), parsedValues);
 
